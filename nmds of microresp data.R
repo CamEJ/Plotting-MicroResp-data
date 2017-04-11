@@ -1,82 +1,37 @@
 
-# trying nmds microresp
+## Plotting carbon utilization profile data from microresp
+## system as an nMDS 
+# data input (head) looks like this where there are four treatments and 
+## 14 timepoints
+
+#                  Tmt1_T0   Tmt2_T0    Tmt1_T1   Tmt2_T1   Tmt1_T2    Tmt2_T2
+#Cysteine        0.30762150 1.0007201 0.30157851 0.5863990 0.2790756 0.48249941
+#GABA            0.16796625 0.9996302 0.18081572 0.4551209 0.1757800 0.38341919
+#Lysine          0.04361777 0.2569897 0.04325326 0.1109734 0.0444487 0.07450042
+#MalicAcid       0.39896253 0.7568375 0.33224924 0.7058575 0.2775511 0.53305969
+#a-ketoglutarate 0.90591633 0.8458032 0.78273238 0.7568823 0.5561732 0.59555168
+#OxalicAcid      0.64296843 0.9998756 0.24948304 0.6052436 0.1701977 0.24571969
+
 setwd("C:/Users/Camilla/Dropbox/Data & analysis/WP3 Slurry disturbance/R")
 
 library(vegan)
 library(MASS)
 library(ggplot2)
 
-pod <- read.table("Mresp-T12-AllUntransformed.txt", sep = "\t", header=T, row.names=1)
+
+####### Note: did this On transformed data - this is what I will present so far
+## transformed in excel for vals of each substrate for entire sampling 
+## period to be between 0 and 1. Data in Microresp-heatmap-collation.xls
+## need to find out if it's correct to use transformed or not in ordination - 3/4/2017. 
+
+pod <- read.table("T13-ExArg-transformed.txt", sep = "\t", header=T, row.names=1)
 
 MR <- t(pod)
-#P.dist <- dist(MR, method="euclidean")
 
-v.dist <- vegdist(MR, method="euclidean", binary=FALSE, diag=FALSE, upper=FALSE)
-
-
-NMDS2 <- metaMDS(v.dist, distance = "euclidean", k = 2, trymax = 20, autotransform =TRUE,
-        noshare = 0.1, wascores = TRUE, expand = TRUE, trace = 1,
-        old.wa = FALSE)
-
-plot(NMDS2, type="t")
-
-# read in metadata
-meTa <- read.table("MetaData.txt", header = TRUE, row.names = 1, sep='\t')
-
-plot(NMDS2$points, col = meTa$timepoint)
-
-# making a dataframe with NMDS data and metadata in one so can plot
-# using ggplot
-
-# first convert metaMDS output into a dataframe
-data.scores <- as.data.frame(scores(NMDS2)) # have a look at it and check ok
-
-# choose row names (IDS) from metadata file that i read in just now 
-# as one of columns. 
-
-data.scores$id<- rownames(data.scores)
-# now add info re treatment and sample day as two extra colums in data.scores
-# data frame
-
-data.scores$treatment<- meTa$Treatment
-data.scores$time<- meTa$timepoint
-data.scores$time <- factor(data.scores$time, levels = data.scores$time )
+v.dist <- vegdist(MR, method="bray", binary=FALSE, diag=FALSE, upper=FALSE)
 
 
-##
-NMDSplot <- ggplot(data.scores, title='nMDS of MicroResp') +
-  geom_point(aes(x=NMDS1, y=NMDS2, color=time))
-NMDSplot
-
-##Modify shapes so can display the different treatments within the days
-
-data.scores.shape.names = unique(data.scores$treatment)
-data.scores.shape <- 1:(length(data.scores.shape.names))
-names(data.scores.shape) <- data.scores.shape.names
-data.scores.shape["samples"] <- 46
-
-
-
-
-nMDS.Plot <- ggplot(data.scores) +
-  geom_point(aes(x=NMDS1, y=NMDS2, color=time, shape = treatment),size=3)  +
-  scale_shape_manual(values = data.scores.shape) +
-  theme(legend.key.size=unit(0.3,"cm"))
-nMDS.Plot
-
-
-####### now try it on transformed data - this is what I will present so far
-## meed to find out if it's correct to use transformed or not - 3/4/2017. 
-
-pod <- read.table("mrespSubsHeatMap-transformedexArg.txt", sep = "\t", header=T, row.names=1)
-
-MR <- t(pod)
-#P.dist <- dist(MR, method="euclidean")
-
-v.dist <- vegdist(MR, method="euclidean", binary=FALSE, diag=FALSE, upper=FALSE)
-
-
-NMDS2 <- metaMDS(v.dist, distance = "euclidean", k = 2, trymax = 20, autotransform =TRUE,
+NMDS2 <- metaMDS(v.dist, distance = "bray", k = 2, trymax = 20, autotransform =TRUE,
                  noshare = 0.1, wascores = TRUE, expand = TRUE, trace = 1,
                  old.wa = FALSE)
 
@@ -88,23 +43,33 @@ stressplot(NMDS2)
 # then basic plot of nmds. 
 plot(NMDS3, type="t")
 
-# read in metadata
+# read in metadata file which will give info on each sample for colour
+# and shape in nmds. head looks like this
+
+#Tmt timepoint Treatment   Phase
+#Tmt1_T0 Tmt1        T0   Control NoFlood
+#Tmt2_T0 Tmt2        T0    Slurry NoFlood
+#Tmt1_T1 Tmt1        T1   Control NoFlood
+#Tmt2_T1 Tmt2        T1    Slurry NoFlood
+#Tmt1_T2 Tmt1        T2   Control NoFlood
+#Tmt2_T2 Tmt2        T2    Slurry NoFlood
+
 meTa <- read.table("MetaData.txt", header = TRUE, row.names = 1, sep='\t')
 
 plot(NMDS2$points, col = meTa$timepoint)
 
-# making a dataframe with NMDS data and metadata in one so can plot
+# Now make a dataframe with NMDS data and metadata in one so can plot
 # using ggplot
 
 # first convert metaMDS output into a dataframe
 data.scores <- as.data.frame(scores(NMDS2)) # have a look at it and check ok
 
-# choose row names (IDS) from metadata file that i read in just now 
-# as one of columns. 
-
+# choose row names (IDs) from metadata file as one of columns. 
 data.scores$id<- rownames(data.scores)
+
 # now add info re treatment and sample day as two extra colums in data.scores
-# data frame. Did factor() to keep them in order that I input them. 
+# data frame. Did factor() to keep them in order that I input them when plotted
+# This will bring up warnings, dont worry about them.
 
 data.scores$treatment<- meTa$Treatment
 data.scores$treatment <- factor(data.scores$treatment, levels = data.scores$treatment)
@@ -113,22 +78,13 @@ data.scores$time <- factor(data.scores$time, levels = data.scores$time)
 data.scores$phase<- meTa$Phase
 data.scores$phase <- factor(data.scores$phase, levels = data.scores$phase)
 
-
-##
-NMDSplot <- ggplot(data.scores, title='nMDS of MicroResp') +
-  geom_point(aes(x=NMDS1, y=NMDS2, color=time))
-NMDSplot
-
-
-## Modify shapes so can display the different phase within the days
+## Modify shapes so can display the different experimental phases within the days
 
 data.scores.shape.names = unique(data.scores$phase)
 data.scores.shape <- 1:(length(data.scores.shape.names))
 names(data.scores.shape) <- data.scores.shape.names
-data.scores.shape["samples"] <- 46
+data.scores.shape["samples"] <- 50 # change as appropriate
 
-#in the end not actually sure I need to do this as I'm going to specify which
-# shapes I want to use. 
 
 # using ggplots default colour scheme:
 
@@ -144,7 +100,7 @@ nMDS.Plot
 # labelled as in all my other plots. 
 
 library(ggthemr)
-# define 
+# define 4 colours
 WP3_colsA <- c("black", "chocolate4", "slateblue", "olivedrab")
 # add background
 WP3_cols <- c("#555555", WP3_colsA)
@@ -160,15 +116,15 @@ WP3Cols <- define_palette(
 
 ggthemr(WP3Cols)    
 
- # and replot with new color scheme
+# and replot with new color scheme
 
 nMDS.Plot <- ggplot(data.scores) +
   geom_point(aes(x=NMDS1, y=NMDS2, color=treatment, shape = phase),size=7, stroke=2)  +
   scale_shape_manual(values = data.scores.shape) +
   theme(legend.key.size=unit(0.3,"cm")) +
   theme_bw() 
- nMDS.Plot
-                    
+nMDS.Plot
+
 ## now different way as i want to add labels next to each point
 ## in order to ID timepoint
 
@@ -189,12 +145,13 @@ P <- ggplot(data.scores, aes(x= NMDS1, y= NMDS2, colour=treatment, shape=phase, 
   theme_bw() 
 P
 
-  # label each point with time. Put colour=control
+# label each point with time. Put colour=control
 # as want all these labels in black text, otherwise looks messy.
 # play with hjust and vjust to move text around
+# h just moves text left to right ( left bigger the number)
 
-P2 <- P +geom_text(aes(label=time, colour="Control"),hjust=0.4, vjust=0.3, 
-                      size=5, fontface = "bold") 
+P2 <- P +geom_text(aes(label=time, colour="Control"),hjust=0.45, vjust=0.3, 
+                   size=4, fontface = "bold") 
 
 P2 + labs(shape="Phase", colour="Treatment") + # update legend titles.
   # change legend icon size for Treatment
@@ -203,9 +160,10 @@ P2 + labs(shape="Phase", colour="Treatment") + # update legend titles.
   guides(shape = guide_legend(override.aes = list(size=6))) +
   # change spacing of legend icons. 
   theme(legend.key.size = unit(1.8,"line"))
-   
-  
- # done. Play with export dims to get best. I found around 1200 width
+
+
+# done. Play with export dims to get best. I found around 1200 width
 # was good but it depends how big you made points in the end. 
 
+## 
   
