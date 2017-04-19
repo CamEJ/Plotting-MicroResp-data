@@ -19,7 +19,9 @@
 # sheet of that book.
 
 setwd("C:/Users/Camilla/Dropbox/Data & analysis/WP3 Slurry disturbance/R")
+library(ggplot2)
 
+# read in file
 D1 <- read.table(file="basalResp-march27.txt", header=T, sep='\t')
 
 D1$timepoint <- factor(D1$timepoint, levels = D1$timepoint)
@@ -33,6 +35,7 @@ p <- ggplot(D1, aes(x=timepoint, y=BasalResp, ymin=BasalResp-pSd, ymax=BasalResp
   geom_hline(yintercept = 0.535, linetype=2)+ # y intercept= Av of all control resp
   coord_flip(ylim = c(0.12, 1.7))+
   xlab('Time Point')+
+  ylab(expression(paste('Basal Respiration (', mu, 'g ', C-CO[2],' ', g^-1, 'soil ', hr^-1, ' )' ))) +
   geom_point(colour="black", shape=21, size = 10) +
   aes(fill = factor(Treatment)) + 
   scale_fill_manual(values=c("black", "chocolate4", "slateblue", "olivedrab"))
@@ -46,5 +49,4 @@ p2 <- p + theme_bw() +
   theme(legend.title = element_text(size=16)) +
   labs(fill="Treatment") 
 p2
-
 
