@@ -20,31 +20,31 @@
 
 setwd("C:/Users/Camilla/Dropbox/Data & analysis/WP3 Slurry disturbance/R")
 
-
-D1 <- read.table(file="basalResp-march25.txt", header=T, sep='\t')
+D1 <- read.table(file="basalResp-march27.txt", header=T, sep='\t')
 
 D1$timepoint <- factor(D1$timepoint, levels = D1$timepoint)
+# do this so it keeps time points in order
+# don't worry too much about resulting warning message
+D1$Treatment <- factor(D1$Treatment, levels = D1$Treatment)
+# and again so it keeps treatments in correct order in legend. 
 
-
-
-
-# --------------------- Soil only -------------------
 p <- ggplot(D1, aes(x=timepoint, y=BasalResp, ymin=BasalResp-pSd, ymax=BasalResp+pSd))+
   geom_pointrange(size=0.75)+
-  geom_hline(yintercept = 0.455, linetype=2)+
+  geom_hline(yintercept = 0.535, linetype=2)+ # y intercept= Av of all control resp
   coord_flip(ylim = c(0.12, 1.7))+
   xlab('Time Point')+
-  geom_point(colour="black", shape=21, size = 7) +
-  aes(fill = factor(treatment)) + 
+  geom_point(colour="black", shape=21, size = 10) +
+  aes(fill = factor(Treatment)) + 
   scale_fill_manual(values=c("black", "chocolate4", "slateblue", "olivedrab"))
                     p
 
 p2 <- p + theme_bw() + 
-  theme(axis.text.y=element_text(size=15, colour="black")) +
-  theme(axis.text.x=element_text(size=13, colour="black"))+
+  theme(axis.text.y=element_text(size=17, colour="black")) +
+  theme(axis.text.x=element_text(size=16, colour="black"))+
   #theme(legend.title=element_text(name="Treatment"))
-  labs(fill="Treatment")
+  theme(legend.text = element_text(size=15)) +
+  theme(legend.title = element_text(size=16)) +
+  labs(fill="Treatment") 
 p2
 
-labels = c("Control", "+ Slurry", 
-           "+ Flood", "+ Slurry + Flood" 
+
