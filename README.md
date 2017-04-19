@@ -1,2 +1,2 @@
 # Plotting-MicroResp-data
-Trying to plot microresp data - works in progress, heatmaps etc. 
+Plotting microresp data - currently works in progress, heatmaps etc. 
