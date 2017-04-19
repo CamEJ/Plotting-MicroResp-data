@@ -19,10 +19,9 @@
 # sheet of that book.
 
 setwd("C:/Users/Camilla/Dropbox/Data & analysis/WP3 Slurry disturbance/R")
-library(ggplot2)
 
-# read in file
-D1 <- read.table(file="basalResp-march27.txt", header=T, sep='\t')
+
+
 
 D1$timepoint <- factor(D1$timepoint, levels = D1$timepoint)
 # do this so it keeps time points in order
@@ -49,4 +48,5 @@ p2 <- p + theme_bw() +
   theme(legend.title = element_text(size=16)) +
   labs(fill="Treatment") 
 p2
+
 
