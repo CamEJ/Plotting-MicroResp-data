@@ -1,0 +1,79 @@
+# trying to put arrows on nmds plot
+
+# as per this
+# http://www.flutterbys.com.au/stats/tut/tut15.1.html
+
+
+Vars <- read.table("Variables-nMDS.txt", header = TRUE, row.names = 1, sep='\t')
+
+
+
+data.envfit <- envfit(data.scores, Vars, perm=999)
+
+envScores <- as.data.frame(scores(data.envfit, "vectors")) 
+
+# this is alongside nmds of mresp data. GOt here but now
+# i need to figure out how to do in ggplot as this plot is GROSS
+
+# will be similar to in lime nmds plot i suppose
+# Showing which OTUS are responsible for shifting communities with arrows
+
+## originial tutorial uses output from indicator() in mothur
+## definition of indicator value: "Indicator value The degree to which a species is indicator
+## of (the conditions found in) a group of sites" Legendre, 2013
+## I chose ones with P<0.05 and who had highest indicator values as:
+## "IV ranges from 0 (no indication) to 100 (perfect indication)."
+## from Dai et al., 2006
+
+"Otu000168", "Otu000458", "Otu000607", "Otu000813", "Otu000331", "Otu000241", "Otu000136", "Otu000266", "Otu000026", "Otu000292"
+
+## looked in indicator.summary file and got top10 from here 
+# opened in excel, ordered by indicator column biggest to smallest. Chose
+## top 10 biggest (all of which had sig p values)
+top10indicator = mothurNMDSspearman[c("Otu000168", "Otu000458", "Otu000607", "Otu000813", "Otu000331", "Otu000241", "Otu000136", "Otu000266", "Otu000026", "Otu000292"),]
+
+
+#top10indicator = mothurNMDSspearman[c("Otu000567","Otu002988","Otu001424","Otu003534","Otu002069","Otu000875","Otu002937","Otu004324","Otu010194", "Otu002250"),]
+
+
+
+## "Otu000336", "Otu000168", "Otu000656", "Otu000531", "Otu000458", "Otu001222", "Otu000607", "Otu000813", "Otu000331", "Otu000769", "Otu000241", "Otu000136", "Otu000621"
+
+arrowmatrix = top10indicator
+arrowdf <- data.frame(labels = rownames(arrowmatrix), arrowmatrix)
+
+# get taxonomic information from the original tax file
+## I chose order here due to so many unclassified at genus level
+
+arrowdf <- data.frame(labels = taxFile[rownames(arrowmatrix),"Class"], arrowmatrix)
+
+arrowmap <- aes(xend = axis1, yend = axis2, x = 0, y = 0, alpha=0.5, shape = NULL, color = NULL, label = labels)
+labelmap <- aes(x = axis1, y = axis2 + 0.04, shape = NULL, color = NULL, label = labels, size=1.5)
+
+##don't know what npc stands for,some kind of default
+arrowhead = arrow(length = unit(0.02, "npc"))
+
+## make plot
+mothurNMDSplot <- ggplot(mothurNMDSmeta) +
+  
+  geom_point(aes(x=axis1, y=axis2, color=GrowthStage))
+## add arrow
+mothurNMDSplotArrow <- mothurNMDSplot + geom_segment(arrowmap, size = 0.5, data = arrowdf, color = "black",  arrow = arrowhead, show_guide = FALSE) + geom_text(labelmap, size = 3, data = arrowdf)
+mothurNMDSplotArrow 
+
+## if you get an error somewhere here, load the top10indicator matrix to check you have entered all OTU numbers
+## correctly. If you didnt, one line or row entries will come as NA
+
+## To plot all these together go to 'putting plots together_arrow_geom_nmds' script
+## also shows does change in size of text etc here. 
+
+
+
+
+#### 
+
+taxFile = read.table('taxoForArrows.txt', header=T, sep='\t')
+rownames(taxFile) = taxFile[,1]
+taxFile = taxFile[,2:8]
+taxFile = as.matrix(taxFile)
+head(taxFile)
