@@ -1,6 +1,6 @@
 
 # forest plots representing changes in basal respiration from control
-
+library(ggplot2)
 # the data used here is from the 'water only' wells of the microresp,
 # with each data point being an average of the three bio reps (microcosms)
 # the data file used has 4 colums, here is the head:
@@ -17,11 +17,9 @@
 # the excel doc from which this data is taken is in microresp data folder &
 # is called Microresp-heatmap-collation.xls - and see appropriately labelled
 # sheet of that book.
+setwd("C:/Users/Camilla/Dropbox/Data & analysis/WP3 Slurry disturbance/Plotting Data/PhenotypicData-R")
 
-setwd("C:/Users/Camilla/Dropbox/Data & analysis/WP3 Slurry disturbance/R")
-
-
-
+D1 <- read.table("BasalResp-19April.txt", sep = "\t", header=T)
 
 D1$timepoint <- factor(D1$timepoint, levels = D1$timepoint)
 # do this so it keeps time points in order
