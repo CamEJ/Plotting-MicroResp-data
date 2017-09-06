@@ -22,17 +22,28 @@ library(ggplot2)
 
 setwd("C:/Users/Camilla/Dropbox/Data & analysis/WP3 Slurry disturbance/Plotting Data/PhenotypicData-R")
 
+# 1 read in data
 D1 <- read.table("BasalResp-19April.txt", sep = "\t", header=T)
 
-# run setFactorOrder function (R basics folder)
+## 2. get mean of basal resp for control for whole expt
+## as you'll plot this
+
+dd <- subset(D1, Treatment=="Control")
+
+DD = dd[,c(2,5)]
+sapply(DD, function(cl) list(means=mean(cl,na.rm=TRUE), sds=sd(cl,na.rm=TRUE)))
+# Output: means 0.5349921
+
+# 3. run setFactorOrder function (R basics folder)
 # then do the following to ensure in correct order when plotting
 
-# 1 order you want timepoints to occur
+# order you want timepoints to occur
 D1[["timepoint"]] <- setFactorOrder(D1[["timepoint"]], c("T0", "T1", "T2", "T3", "T4", "T5","T6","T7", "T8", "T9","T10","T11","T12", "T13"))
 
 # order of treatments. 
 D1[["Treatment"]] <- setFactorOrder(D1[["Treatment"]], c("Control", "Slurry", "Flood", "Flood+Slurry"))
 
+# 4. now to plotting:
 
 p <- ggplot(D1, aes(x=timepoint, y=BasalResp, ymin=BasalResp-pSd, ymax=BasalResp+pSd))+
   geom_pointrange(size=0.75)+
@@ -43,7 +54,7 @@ p <- ggplot(D1, aes(x=timepoint, y=BasalResp, ymin=BasalResp-pSd, ymax=BasalResp
   geom_point(colour="black", shape=21, size = 10) +
   aes(fill = factor(Treatment)) + 
   scale_fill_manual(values=c("black", "chocolate4", "slateblue", "olivedrab"))
-p # print and check all ok. 
+p
 
 
 # now make axis font sizes better etc
@@ -58,5 +69,5 @@ p2 <- p + theme_bw() +
   labs(fill="Treatment") 
 p2
 
-# save as pdf
+
 
