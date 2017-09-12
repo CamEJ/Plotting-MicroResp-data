@@ -44,3 +44,112 @@ even2 = even[,2]
 even2 = as.data.frame(even2)
 even$E = apply(even2,1,X4)
 
+
+## now add extra sample info to this df for plotting
+
+even$treatment<- meta$Treatment
+even$time<- meta$timepoint
+even$phase<- meta$Phase.1
+
+# put in corrrect order. 
+even[["treatment"]] <- setFactorOrder(even[["treatment"]], c("Control", "Slurry", "Flood", "Flood+Slurry"))
+even[["time"]] <- setFactorOrder(even[["time"]], c("T0", "T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12", "T13"))
+even[["phase"]] <- setFactorOrder(even[["phase"]], c("NoFlood", "Flooded", "Recovery"))
+
+
+write.csv(even, "CatabolicEvennessMicroResp.csv")
+
+
+
+
+# ---------------------- and now to plotting --------------------------
+
+
+
+c <- ggplot(even, aes(factor(treatment), E, fill = factor(treatment))) +
+  
+  ## + geom_boxplot so it knows what type of plot
+  # and put colour = black to make lines of box black. 
+  
+  geom_boxplot(colour="black") 
+c + facet_wrap(~time, ncol = 3)
+
+c <- ggplot(even, aes(factor(time), E, fill = factor(treatment))) +
+  
+  ## + geom_boxplot so it knows what type of plot
+  # and put colour = black to make lines of box black. 
+  
+  geom_boxplot(colour="black") 
+c + facet_wrap(~treatment, ncol = 2)
+
+
+evenCut = subset(even, (time %in% c("T0", "T1", "T2", "T3", "T4", "T5", "T6", "T7", "T9", "T10", "T11", "T12", "T13")))
+
+c <- ggplot(evenCut, aes(factor(time), E, fill = factor(treatment))) +
+  
+  ## + geom_boxplot so it knows what type of plot
+  # and put colour = black to make lines of box black. 
+  
+  geom_boxplot(colour="black") 
+
+re = c + facet_wrap(~treatment, ncol = 2)
+
+rep <- re + labs(fill="    Treatment ", y = " Catabolic evenness") +
+  
+  ## specify labels for axes and plot title if required
+  
+  theme_bw() +
+  
+  
+  ## change text size and placing of axes and titles
+  ## ensure , at end of each line 
+  ## legend.key.size changes size of legend and required 'grid' package to be loaded for unit() to work
+  
+  theme(axis.text.x=element_text(size=14, vjust=0.5, colour = "black"), 
+        axis.text.y=element_text(size=16, vjust=0.5, colour = "black"),
+        axis.title.y=element_text(size=16, vjust=1, colour="black"),
+        legend.text=element_text(size=16, vjust=0.5),
+        legend.title=element_text(size=16, vjust=0.5),
+        legend.key.size=unit(1.5, "cm"),
+        axis.title.x=element_blank(),
+        strip.text.x = element_text(size = 18, colour = "black"),# change font of facet label
+        strip.background =  element_rect(fill = "white") ) # remove grey backgroup of facet label
+
+rep
+
+## -------------------- wrap by day
+
+c <- ggplot(evenCut, aes(factor(treatment), E, fill = factor(treatment))) +
+  
+  ## + geom_boxplot so it knows what type of plot
+  # and put colour = black to make lines of box black. 
+  
+  geom_boxplot(colour="black") 
+re = c + facet_wrap(~time, ncol = 3)
+rep <- re + labs(fill="    Treatment ", y = " Catabolic evenness") +
+  
+  ## specify labels for axes and plot title if required
+  
+  theme_bw() + 
+  
+  
+  ## change text size and placing of axes and titles
+  ## ensure , at end of each line 
+  ## legend.key.size changes size of legend and required 'grid' package to be loaded for unit() to work
+  
+  theme(#axis.text.x=element_text(size=14, vjust=0.5, colour = "black"), 
+    axis.text.x=element_blank(),
+    axis.ticks.x=element_blank(),
+    axis.text.y=element_text(size=16, vjust=0.5, colour = "black"),
+        axis.title.y=element_text(size=16, vjust=1, colour="black"),
+        legend.text=element_text(size=16, vjust=0.5),
+        legend.title=element_blank(),
+        legend.key.size=unit(1.1, "cm"),
+        axis.title.x=element_blank(),
+        strip.text.x = element_text(size = 18, colour = "black"),# change font of facet label
+        strip.background =  element_rect(fill = "white"),
+    legend.direction = "horizontal") # remove grey backgroup of facet label
+
+rep +
+theme(legend.position = c(1, 0), legend.justification = c(1, 0))
+
