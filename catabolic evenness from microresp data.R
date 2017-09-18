@@ -1,9 +1,242 @@
 # catabolic evenness from microresp data
 
+library(vegan)
 
 pod <- read.table("MResp-BioReps_UnTransformed.txt", sep = "\t", header=T, row.names=1)
-
 meta <- read.table("Mresp-metadata.txt", header = TRUE, row.names = 1, sep='\t')
+
+
+Shan = diversity(pod, "shannon") # actually think I'll stick with simpson. 
+
+H= diversity(pod, "simpson") # calculate diversity
+
+J <- Shan/log(specnumber(pod)) # calculate evenness 
+                                # where evenness = div/(log species no in sample)
+
+# got this from here
+# http://www2.uaem.mx/r-mirror/web/packages/vegan/vignettes/diversity-vegan.pdf
+
+# put results into dfs for plotting. 
+resDiv = as.data.frame(Shan) # make into df. 
+
+resEven = as.data.frame(J) # make into df. 
+
+MDiv = resDiv[,1]
+MDiv = as.data.frame(MDiv) # make into df. 
+colnames(MDiv)[1] <- "div" # give this variable a names
+rownames(MDiv) = row.names(pod) # assign row names from orignal df
+MDiv$even = resEven[,1] # add evenness data
+
+#now add metadata info for plotting
+
+MDiv$treatment = meta$Treatment
+MDiv$time = meta$timepoint
+
+write.csv(MDiv, "CatabolicEvenness&Div.csv")
+
+# run setFactorOrder Function
+MDiv[["treatment"]] <- setFactorOrder(MDiv[["treatment"]], c("Control", "Slurry", "Flood", "Flood+Slurry"))
+MDiv[["time"]] <- setFactorOrder(MDiv[["time"]], c("T0", "T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12", "T13"))
+
+
+
+
+c <- ggplot(MDiv, aes(factor(treatment), div, fill = factor(treatment))) +
+  
+  ## + geom_boxplot so it knows what type of plot
+  # and put colour = black to make lines of box black. 
+  
+  geom_boxplot(colour="black") +
+  scale_fill_manual(values=c("black", "chocolate4", "slateblue", "olivedrab"))
+c4 = c + facet_wrap(~time, ncol = 3)
+
+
+
+rep <- c4 + labs(fill="    Treatment ", y = " Catabolic diversity") +
+  
+  ## specify labels for axes and plot title if required
+  
+  theme_bw() +
+  
+  
+  ## change text size and placing of axes and titles
+  ## ensure , at end of each line 
+  ## legend.key.size changes size of legend and required 'grid' package to be loaded for unit() to work
+  
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.text.y=element_text(size=16, vjust=0.5, colour = "black"),
+        axis.title.y=element_text(size=18, vjust=1, colour="black"),
+        legend.text=element_text(size=16, vjust=0.5),
+        legend.title=element_blank(),
+        legend.key.size=unit(1.25, "cm"),
+        axis.title.x=element_blank(),
+        #legend.direction = "horizontal",
+        strip.text.x = element_text(size = 18, colour = "black"),# change font of facet label
+        strip.background =  element_rect(fill = "white"),
+        legend.position = c(1, 0), legend.justification = c(1, 0)
+        ) # remove grey backgroup of facet label
+
+rep
+
+rep + guides(fill = guide_legend(ncol=2))
+
+# =============== strip plot / dot plot
+
+
+c <- ggplot(MDiv, aes(factor(treatment), even, fill = factor(treatment))) +
+  
+  ## + geom_boxplot so it knows what type of plot
+  # and put colour = black to make lines of box black. 
+  
+  geom_point(shape=21, size = 5) +
+  scale_fill_manual(values=c("black", "chocolate4", "slateblue", "olivedrab"))
+c4 = c + facet_wrap(~time, ncol = 3)
+
+rep <- c4 + labs(fill="    Treatment ", y = " Catabolic evenness\n") +
+  
+  ## specify labels for axes and plot title if required
+  
+  theme_bw() +
+  
+  
+  ## change text size and placing of axes and titles
+  ## ensure , at end of each line 
+  ## legend.key.size changes size of legend and required 'grid' package to be loaded for unit() to work
+  
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.text.y=element_text(size=16, vjust=0.5, colour = "black"),
+        axis.title.y=element_text(size=18, vjust=1, colour="black"),
+        legend.text=element_text(size=16, vjust=0.5),
+        legend.title=element_blank(),
+        legend.key.size=unit(1.25, "cm"),
+        axis.title.x=element_blank(),
+        legend.direction = "horizontal",
+        strip.text.x = element_text(size = 18, colour = "black"),# change font of facet label
+        strip.background =  element_rect(fill = "white"), # remove grey backgroup of facet label
+        legend.position = "top"
+  ) # remove grey backgroup of facet label
+
+rep
+
+#rep + guides(fill = guide_legend(ncol=2))
+
+
+
+
+# --------- with transformed 
+
+pod <- read.table("MResp-BioReps_UnTransformed.txt", sep = "\t", header=T, row.names=1)
+meta <- read.table("Mresp-metadata.txt", header = TRUE, row.names = 1, sep='\t')
+
+m <- as.matrix(pod)
+
+
+## Rescale each column to range between 0 and 1
+# where each c source is a different column
+
+poo <- apply(m, MARGIN = 2, FUN = function(X) (X - min(X))/diff(range(X)))
+
+pool <- as.data.frame(poo)
+
+
+# function(x) x / sum(x) )
+
+sapply(poo, function(cl) list(means=mean(cl,na.rm=TRUE), sds=sd(cl,na.rm=TRUE)))
+
+
+head(poo)
+
+
+X2 = function(x){x/sum(x, na.rm=TRUE)}
+# apply the function where you change second argument to 2 if you
+# want it by column instead of row as in here. 
+res = apply(pod,1,X2)
+
+res = as.data.frame(res) # make into df. 
+rest = t(res) # transform output from applt
+rest = as.data.frame(rest)
+
+Shan = diversity(rest, "shannon") # actually think I'll stick with simpson. 
+
+H= diversity(rest, "simpson") # calculate diversity
+
+J <- Shan/log(specnumber(rest)) # calculate evenness 
+# where evenness = div/(log species no in sample)
+
+# got this from here
+# http://www2.uaem.mx/r-mirror/web/packages/vegan/vignettes/diversity-vegan.pdf
+
+# put results into dfs for plotting. 
+resDiv = as.data.frame(Shan) # make into df. 
+
+resEven = as.data.frame(J) # make into df. 
+
+MDiv = resDiv[,1]
+MDiv = as.data.frame(MDiv) # make into df. 
+colnames(MDiv)[1] <- "div" # give this variable a names
+rownames(MDiv) = row.names(rest) # assign row names from orignal df
+MDiv$even = resEven[,1] # add evenness data
+
+#now add metadata info for plotting
+
+MDiv$treatment = meta$Treatment
+MDiv$time = meta$timepoint
+
+write.csv(MDiv, "CatabolicEvenness&Div.csv")
+
+# run setFactorOrder Function
+MDiv[["treatment"]] <- setFactorOrder(MDiv[["treatment"]], c("Control", "Slurry", "Flood", "Flood+Slurry"))
+MDiv[["time"]] <- setFactorOrder(MDiv[["time"]], c("T0", "T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12", "T13"))
+
+
+
+
+c <- ggplot(MDiv, aes(factor(treatment), div, fill = factor(treatment))) +
+  
+  ## + geom_boxplot so it knows what type of plot
+  # and put colour = black to make lines of box black. 
+  
+  geom_boxplot(colour="black") +
+  scale_fill_manual(values=c("black", "chocolate4", "slateblue", "olivedrab"))
+c4 = c + facet_wrap(~time, ncol = 3)
+
+
+
+rep <- c4 + labs(fill="    Treatment ", y = " Catabolic diversity") +
+  
+  ## specify labels for axes and plot title if required
+  
+  theme_bw() +
+  
+  
+  ## change text size and placing of axes and titles
+  ## ensure , at end of each line 
+  ## legend.key.size changes size of legend and required 'grid' package to be loaded for unit() to work
+  
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.text.y=element_text(size=16, vjust=0.5, colour = "black"),
+        axis.title.y=element_text(size=18, vjust=1, colour="black"),
+        legend.text=element_text(size=16, vjust=0.5),
+        legend.title=element_blank(),
+        legend.key.size=unit(1.25, "cm"),
+        axis.title.x=element_blank(),
+        #legend.direction = "horizontal",
+        strip.text.x = element_text(size = 18, colour = "black"),# change font of facet label
+        strip.background =  element_rect(fill = "white"),
+        legend.position = c(1, 0), legend.justification = c(1, 0)
+  ) # remove grey backgroup of facet label
+
+rep
+
+rep + guides(fill = guide_legend(ncol=2))
+
+## didnt make much diff, transforming or not, so went with untransformed
+
+# -------------------- this stuff below is wrong but I will leave it because
+# ---------------- might be useful for later, working w formulae etc. --------- ###
 
 
 # make a function where each substrate (x) is divided by the sum 
